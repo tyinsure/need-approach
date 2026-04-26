@@ -493,7 +493,7 @@
           <label>รายจ่ายครอบครัวต่อเดือน <span class="input-hint">(บาท)</span></label>
           <div class="input-wrapper">
             <span class="input-prefix">฿</span>
-            <input type="number" id="monthly_expense" placeholder="50,000" oninput="updateLive(this); calc()" min="0">
+            <input type="number" id="monthly_expense" placeholder="0" oninput="updateLive(this); calc()" min="0">
           </div>
           <div class="live-display" id="l_monthly_expense"></div>
         </div>
@@ -501,7 +501,7 @@
           <label>จำนวนปีที่ต้องการคุ้มครอง <span class="input-hint">(ปี)</span></label>
           <div class="input-wrapper">
             <span class="input-prefix" style="font-size:12px">ปี</span>
-            <input type="number" id="protect_years" placeholder="20" oninput="calc()" min="0" max="50">
+            <input type="number" id="protect_years" placeholder="0" oninput="calc()" min="0" max="50">
           </div>
         </div>
         <div class="note-box input-group full">
