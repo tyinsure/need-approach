@@ -457,20 +457,22 @@
 
   <!-- Header -->
   <div class="header">
-    <div class="header-badge">Insurance Planning Tool</div>
-    <h1>คำนวณ<span>ทุนประกันชีวิต</span><br>ที่คุณต้องการ</h1>
+   <!-- <div class="header-badge">Insurance Planning Tool</div> -->
+    <h1>คำนวณ<span>ทุนประกันชีวิตจำเป็น</span> <!-- <br>ที่คุณต้องการ</h1> -->
     <p>วิเคราะห์ความต้องการที่แท้จริงด้วยหลัก Need Approach<br>เพื่อให้ครอบครัวได้รับการคุ้มครองที่เพียงพอ</p>
   </div>
 
   <!-- Formula Guide -->
   <div class="formula-guide">
-    <strong>📐 สูตรคำนวณ (Need Approach)</strong>
+    <strong>📐 สูตรคำนวณ ทุนประกันจำเป็น (Need Approach)</strong>
     <div class="formula-row">
+      <div class="f-box f-red">ค่าใช้จ่ายครอบครัวทั้งหมด</div>
+      <span class="f-op">+</span>
       <div class="f-box f-red">ภาระทั้งหมด</div>
       <span class="f-op">−</span>
       <div class="f-box f-green">ทรัพย์สินที่มี</div>
       <span class="f-op">=</span>
-      <div class="f-box f-gold">ทุนประกันที่ต้องการ</div>
+      <div class="f-box f-gold">ทุนประกันที่ต้องเตรียมเพิ่ม</div>
     </div>
   </div>
 
@@ -659,23 +661,23 @@
 
     <div class="result-breakdown">
       <div class="breakdown-item">
-        <div class="bd-label">ภาระทั้งหมด</div>
+        <div class="bd-label">จำนวนเงินที่ต้องเตรียม</div>
         <div class="bd-val red" id="total-need">฿ 0</div>
       </div>
       <div class="breakdown-item">
-        <div class="bd-label">ทรัพย์สินที่มี</div>
+        <div class="bd-label">จำนวนเงินที่เตรียมไว้แล้ว</div>
         <div class="bd-val green" id="total-asset">฿ 0</div>
       </div>
       <div class="breakdown-item">
-        <div class="bd-label">ช่องว่างที่ขาด</div>
+        <div class="bd-label">จำนวนเงินที่แนะนำให้เตรียมเพิ่ม</div>
         <div class="bd-val" id="total-gap" style="color: var(--gold-light)">฿ 0</div>
       </div>
     </div>
 
-    <button class="btn-calc" onclick="calc()">คำนวณใหม่</button>
+   <!-- <button class="btn-calc" onclick="calc()">คำนวณใหม่</button>
     <p class="result-desc" id="result-desc">
       กรอกข้อมูลด้านบนเพื่อวิเคราะห์ทุนประกันชีวิตที่เหมาะสมกับสถานการณ์ของคุณ
-    </p>
+    </p> -->
   </div>
 
   <div class="disclaimer">
