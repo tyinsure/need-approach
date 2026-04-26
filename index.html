@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คำนวณทุนประกันชีวิต | Need Approach</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0d1b2a;
+    --navy-light: #1b2d42;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --cream: #f8f4ec;
+    --cream-dark: #ede7d9;
+    --red: #c0392b;
+    --green: #1a6b4a;
+    --text: #2c2c2c;
+    --muted: #7a7a7a;
+    --white: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 20%, rgba(201,168,76,0.08) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 80%, rgba(201,168,76,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeDown 0.7s ease both;
+  }
+
+  .header-badge {
+    display: inline-block;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 6px 18px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 44px);
+    color: var(--cream);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  .header h1 span { color: var(--gold); }
+
+  .header p {
+    color: rgba(248,244,236,0.6);
+    font-size: 15px;
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Section Card */
+  .section-card {
+    background: var(--cream);
+    border-radius: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .section-card:nth-child(1) { animation-delay: 0.1s; }
+  .section-card:nth-child(2) { animation-delay: 0.2s; }
+  .section-card:nth-child(3) { animation-delay: 0.3s; }
+  .section-card:nth-child(4) { animation-delay: 0.4s; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 28px;
+    background: var(--navy-light);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+
+  .section-header:hover { background: #243450; }
+
+  .section-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    flex: 1;
+    color: var(--cream);
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .section-subtitle {
+    color: rgba(248,244,236,0.5);
+    font-size: 12px;
+    font-weight: 400;
+    display: block;
+    margin-top: 2px;
+  }
+
+  .section-total {
+    color: var(--gold-light);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .chevron {
+    color: var(--gold);
+    font-size: 18px;
+    transition: transform 0.3s;
+    margin-left: 12px;
+  }
+
+  .section-card.collapsed .chevron { transform: rotate(-90deg); }
+  .section-card.collapsed .section-body { display: none; }
+
+  .section-body {
+    padding: 28px;
+    border-top: 2px solid var(--gold);
+  }
+
+  /* Input grid */
+  .input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 580px) {
+    .input-grid { grid-template-columns: 1fr; }
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .input-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    letter-spacing: 0.3px;
+  }
+
+  .input-hint {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-prefix {
+    position: absolute;
+    left: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    padding: 12px 14px 12px 42px;
+    border: 1.5px solid var(--cream-dark);
+    border-radius: 3px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 15px;
+    color: var(--navy);
+    background: var(--white);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+  }
+
+  .note-box {
+    background: rgba(201,168,76,0.1);
+    border-left: 3px solid var(--gold);
+    padding: 12px 16px;
+    border-radius: 0 3px 3px 0;
+    font-size: 13px;
+    color: #5a4a1a;
+    margin-top: 16px;
+    grid-column: 1 / -1;
+  }
+
+  /* Section subtotal */
+  .subtotal-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 28px;
+    background: var(--cream-dark);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .subtotal-bar .amount { color: var(--navy); }
+  .subtotal-bar .amount.negative { color: var(--green); }
+
+  /* Result Panel */
+  .result-panel {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: 40px 36px;
+    text-align: center;
+    margin-top: 8px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,168,76,0.2);
+    animation: fadeUp 0.6s ease 0.5s both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-panel::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.12), transparent 70%);
+  }
+
+  .result-label {
+    color: var(--gold);
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .result-main {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 8vw, 64px);
+    color: var(--cream);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .result-main span { color: var(--gold); }
+
+  .result-unit {
+    color: rgba(248,244,236,0.5);
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  .result-breakdown {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+
+  @media (max-width: 500px) {
+    .result-breakdown { grid-template-columns: 1fr; }
+  }
+
+  .breakdown-item {
+    background: rgba(255,255,255,0.04);
+    padding: 16px 12px;
+    text-align: center;
+  }
+
+  .breakdown-item .bd-label {
+    color: rgba(248,244,236,0.45);
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .breakdown-item .bd-val {
+    color: var(--cream);
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .breakdown-item .bd-val.red { color: #e88080; }
+  .breakdown-item .bd-val.green { color: #7dcca8; }
+
+  .btn-calc {
+    background: var(--gold);
+    color: var(--navy);
+    border: none;
+    padding: 16px 48px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 3px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 4px 16px rgba(201,168,76,0.3);
+  }
+
+  .btn-calc:hover {
+    background: var(--gold-light);
+    box-shadow: 0 6px 20px rgba(201,168,76,0.4);
+    transform: translateY(-1px);
+  }
+
+  .btn-calc:active { transform: translateY(0); }
+
+  .result-desc {
+    color: rgba(248,244,236,0.5);
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 20px auto 0;
+  }
+
+  /* Formula guide */
+  .formula-guide {
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    color: rgba(248,244,236,0.7);
+    font-size: 13px;
+    line-height: 1.7;
+    animation: fadeUp 0.5s ease 0.05s both;
+  }
+
+  .formula-guide strong {
+    color: var(--gold);
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .formula-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .formula-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .f-box {
+    padding: 4px 12px;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .f-red { background: rgba(192,57,43,0.25); color: #e88080; border: 1px solid rgba(192,57,43,0.4); }
+  .f-green { background: rgba(26,107,74,0.25); color: #7dcca8; border: 1px solid rgba(26,107,74,0.4); }
+  .f-gold { background: rgba(201,168,76,0.2); color: var(--gold-light); border: 1px solid rgba(201,168,76,0.4); }
+
+  .f-op { color: rgba(248,244,236,0.4); font-size: 18px; font-weight: 300; }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Number format display */
+  .live-display {
+    font-size: 11px;
+    color: var(--gold);
+    margin-top: 3px;
+    min-height: 16px;
+    font-weight: 500;
+  }
+
+  .disclaimer {
+    text-align: center;
+    color: rgba(248,244,236,0.3);
+    font-size: 11px;
+    margin-top: 32px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">Insurance Planning Tool</div>
+    <h1>คำนวณ<span>ทุนประกันชีวิต</span><br>ที่คุณต้องการ</h1>
+    <p>วิเคราะห์ความต้องการที่แท้จริงด้วยหลัก Need Approach<br>เพื่อให้ครอบครัวได้รับการคุ้มครองที่เพียงพอ</p>
+  </div>
+
+  <!-- Formula Guide -->
+  <div class="formula-guide">
+    <strong>📐 สูตรคำนวณ (Need Approach)</strong>
+    <div class="formula-row">
+      <div class="f-box f-red">ภาระทั้งหมด</div>
+      <span class="f-op">−</span>
+      <div class="f-box f-green">ทรัพย์สินที่มี</div>
+      <span class="f-op">=</span>
+      <div class="f-box f-gold">ทุนประกันที่ต้องการ</div>
+    </div>
+  </div>
+
+  <!-- Section 1: Living Expenses -->
+  <div class="section-card" id="s1">
+    <div class="section-header" onclick="toggleSection('s1')">
+      <div class="section-num">1</div>
+      <div class="section-title">
+        ค่าใช้จ่ายดำรงชีพของครอบครัว
+        <span class="section-subtitle">เงินที่ครอบครัวต้องใช้หลังจากคุณจากไป</span>
+      </div>
+      <div class="section-total" id="t1">฿ 0</div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="section-body">
+      <div class="input-grid">
+        <div class="input-group">
+          <label>รายจ่ายครอบครัวต่อเดือน <span class="input-hint">(บาท)</span></label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="monthly_expense" placeholder="50,000" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_monthly_expense"></div>
+        </div>
+        <div class="input-group">
+          <label>จำนวนปีที่ต้องการคุ้มครอง <span class="input-hint">(ปี)</span></label>
+          <div class="input-wrapper">
+            <span class="input-prefix" style="font-size:12px">ปี</span>
+            <input type="number" id="protect_years" placeholder="20" oninput="calc()" min="0" max="50">
+          </div>
+        </div>
+        <div class="note-box input-group full">
+          💡 <strong>ตัวอย่าง:</strong> รายจ่าย 50,000 บาท/เดือน × 12 × 20 ปี = 12,000,000 บาท (ไม่รวมดอกเบี้ย)
+        </div>
+      </div>
+    </div>
+    <div class="subtotal-bar">
+      <span>รวมค่าใช้จ่ายดำรงชีพ</span>
+      <span class="amount" id="sub1">฿ 0</span>
+    </div>
+  </div>
+
+  <!-- Section 2: Obligations -->
+  <div class="section-card" id="s2">
+    <div class="section-header" onclick="toggleSection('s2')">
+      <div class="section-num">2</div>
+      <div class="section-title">
+        ภาระหนี้สินและค่าใช้จ่ายพิเศษ
+        <span class="section-subtitle">หนี้ที่ต้องชำระและค่าใช้จ่ายอื่นๆ</span>
+      </div>
+      <div class="section-total" id="t2">฿ 0</div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="section-body">
+      <div class="input-grid">
+        <div class="input-group">
+          <label>หนี้บ้าน / จำนอง <span class="input-hint">(ยอดคงเหลือ)</span></label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="mortgage" placeholder="0" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_mortgage"></div>
+        </div>
+        <div class="input-group">
+          <label>หนี้รถยนต์ <span class="input-hint">(ยอดคงเหลือ)</span></label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="car_loan" placeholder="0" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_car_loan"></div>
+        </div>
+        <div class="input-group">
+          <label>หนี้บัตรเครดิต / หนี้อื่นๆ</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="other_debt" placeholder="0" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_other_debt"></div>
+        </div>
+        <div class="input-group">
+          <label>ค่าการศึกษาบุตร <span class="input-hint">(รวมทุกคน)</span></label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="education" placeholder="0" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_education"></div>
+        </div>
+        <div class="input-group">
+          <label>ค่าพยาบาล / ค่าดูแลผู้สูงอายุ</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="medical" placeholder="0" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_medical"></div>
+        </div>
+        <div class="input-group">
+          <label>ค่าจัดการงานศพ / ค่าใช้จ่ายสุดท้าย</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="funeral" placeholder="150000" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_funeral"></div>
+        </div>
+      </div>
+    </div>
+    <div class="subtotal-bar">
+      <span>รวมภาระหนี้สินและค่าใช้จ่ายพิเศษ</span>
+      <span class="amount" id="sub2">฿ 0</span>
+    </div>
+  </div>
+
+  <!-- Section 3: Assets -->
+  <div class="section-card" id="s3">
+    <div class="section-header" onclick="toggleSection('s3')">
+      <div class="section-num">3</div>
+      <div class="section-title">
+        ทรัพย์สินและความคุ้มครองที่มีอยู่แล้ว
+        <span class="section-subtitle">หักออกจากภาระ เพื่อคำนวณส่วนที่ขาด</span>
+      </div>
+      <div class="section-total" id="t3">฿ 0</div>
+      <div class="chevron">›</div>
+    </div>
+    <div class="section-body">
+      <div class="input-grid">
+        <div class="input-group">
+          <label>เงินออมและเงินฝาก</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="savings" placeholder="0" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_savings"></div>
+        </div>
+        <div class="input-group">
+          <label>ทุนประกันชีวิตที่มีอยู่แล้ว</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="existing_insurance" placeholder="0" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_existing_insurance"></div>
+        </div>
+        <div class="input-group">
+          <label>เงินกองทุนสำรองเลี้ยงชีพ (PVD/SSF)</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="pvd" placeholder="0" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_pvd"></div>
+        </div>
+        <div class="input-group">
+          <label>เงินสวัสดิการจากนายจ้าง / ประกันสังคม</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="welfare" placeholder="0" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_welfare"></div>
+        </div>
+        <div class="input-group">
+          <label>การลงทุน (หุ้น, กองทุน, ทอง ฯลฯ)</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="investments" placeholder="0" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_investments"></div>
+        </div>
+        <div class="input-group">
+          <label>ทรัพย์สินอื่นๆ ที่สามารถเปลี่ยนเป็นเงินได้</label>
+          <div class="input-wrapper">
+            <span class="input-prefix">฿</span>
+            <input type="number" id="other_assets" placeholder="0" oninput="updateLive(this); calc()" min="0">
+          </div>
+          <div class="live-display" id="l_other_assets"></div>
+        </div>
+      </div>
+    </div>
+    <div class="subtotal-bar">
+      <span>รวมทรัพย์สินและความคุ้มครองที่มี</span>
+      <span class="amount negative" id="sub3">฿ 0</span>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-panel">
+    <div class="result-label">ผลการวิเคราะห์ทุนประกัน</div>
+    <div class="result-main" id="result-main">฿ <span id="result-val">0</span></div>
+    <div class="result-unit">บาท (ทุนประกันชีวิตที่ควรทำ)</div>
+
+    <div class="result-breakdown">
+      <div class="breakdown-item">
+        <div class="bd-label">ภาระทั้งหมด</div>
+        <div class="bd-val red" id="total-need">฿ 0</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bd-label">ทรัพย์สินที่มี</div>
+        <div class="bd-val green" id="total-asset">฿ 0</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bd-label">ช่องว่างที่ขาด</div>
+        <div class="bd-val" id="total-gap" style="color: var(--gold-light)">฿ 0</div>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="calc()">คำนวณใหม่</button>
+    <p class="result-desc" id="result-desc">
+      กรอกข้อมูลด้านบนเพื่อวิเคราะห์ทุนประกันชีวิตที่เหมาะสมกับสถานการณ์ของคุณ
+    </p>
+  </div>
+
+  <div class="disclaimer">
+    * ผลการคำนวณนี้เป็นเพียงการประมาณการเบื้องต้นด้วยหลัก Need Approach<br>
+    ควรปรึกษาที่ปรึกษาด้านการเงินหรือตัวแทนประกันชีวิตเพื่อการวางแผนที่เหมาะสม
+  </div>
+
+</div>
+
+<script>
+  function fmt(n) {
+    if (!n && n !== 0) return '0';
+    return Math.round(n).toLocaleString('th-TH');
+  }
+
+  function v(id) {
+    return parseFloat(document.getElementById(id).value) || 0;
+  }
+
+  function updateLive(input) {
+    const val = parseFloat(input.value) || 0;
+    const liveEl = document.getElementById('l_' + input.id);
+    if (liveEl) {
+      liveEl.textContent = val > 0 ? '= ฿' + fmt(val) : '';
+    }
+  }
+
+  function toggleSection(id) {
+    document.getElementById(id).classList.toggle('collapsed');
+  }
+
+  function calc() {
+    // Section 1: living expenses
+    const monthly = v('monthly_expense');
+    const years = v('protect_years');
+    const living = monthly * 12 * years;
+
+    // Section 2: debts & obligations
+    const s2 = v('mortgage') + v('car_loan') + v('other_debt') +
+                v('education') + v('medical') + v('funeral');
+
+    // Section 3: assets
+    const s3 = v('savings') + v('existing_insurance') + v('pvd') +
+                v('welfare') + v('investments') + v('other_assets');
+
+    const totalNeed = living + s2;
+    const gap = Math.max(0, totalNeed - s3);
+
+    // Update section totals
+    document.getElementById('t1').textContent = '฿ ' + fmt(living);
+    document.getElementById('t2').textContent = '฿ ' + fmt(s2);
+    document.getElementById('t3').textContent = '฿ ' + fmt(s3);
+
+    // Update subtotals
+    document.getElementById('sub1').textContent = '฿ ' + fmt(living);
+    document.getElementById('sub2').textContent = '฿ ' + fmt(s2);
+    document.getElementById('sub3').textContent = '฿ ' + fmt(s3);
+
+    // Update result
+    document.getElementById('result-val').textContent = fmt(gap);
+    document.getElementById('total-need').textContent = '฿ ' + fmt(totalNeed);
+    document.getElementById('total-asset').textContent = '฿ ' + fmt(s3);
+    document.getElementById('total-gap').textContent = '฿ ' + fmt(gap);
+
+    // Description
+    let desc = '';
+    if (totalNeed === 0) {
+      desc = 'กรอกข้อมูลด้านบนเพื่อวิเคราะห์ทุนประกันชีวิตที่เหมาะสมกับสถานการณ์ของคุณ';
+    } else if (gap === 0 && s3 >= totalNeed) {
+      desc = '✅ ทรัพย์สินที่คุณมีอยู่เพียงพอรองรับภาระทั้งหมดแล้ว อย่างไรก็ตาม ควรทำประกันเพื่อความมั่นคงและลดความเสี่ยง';
+    } else {
+      const months = monthly > 0 ? Math.round(gap / monthly) : 0;
+      desc = `ครอบครัวของคุณต้องการทุนประกันชีวิตอย่างน้อย ฿${fmt(gap)} บาท เพื่อดูแลค่าใช้จ่ายและชำระภาระหนี้สินทั้งหมด หากทุนประกันเทียบกับรายจ่ายต่อเดือน คือประมาณ ${fmt(months)} เดือน`;
+    }
+    document.getElementById('result-desc').textContent = desc;
+  }
+
+  // Initialize with default funeral value display
+  window.onload = () => {
+    document.getElementById('funeral').value = 150000;
+    updateLive(document.getElementById('funeral'));
+    calc();
+  };
+</script>
+</body>
+</html>
